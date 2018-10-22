@@ -1,4 +1,4 @@
-# Python-Projects
+# University Coding Projects
 
 Lab01: Accounting Functions, Basic Functions   
 Lab02: Random Walk   
