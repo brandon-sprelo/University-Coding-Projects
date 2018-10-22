@@ -1,0 +1,132 @@
+---
+title: "Ranking NBA Teams"
+output: github_document
+author: 'Brandon Huang'
+---
+
+### Table of Contents
+* Barplots of Salary, Points, Experience with Average Vertical Line 
+
+---
+
+``` {r library, include = FALSE}
+library(ggplot2)
+library(dplyr) #load pacakge: dplyr 
+``` 
+
+### Creating `teams` DataFrame 
+
+---
+
+``` {r importing data}
+setwd("/Users/brandon/Desktop/stat133/stat133-hws-fall17/hw03/data") 
+teams <- read.csv(file = 'nba2017-teams.csv', stringsAsFactors = FALSE)
+```
+
+``` {r arrange teams salary in desc order, include = FALSE}
+teams <- arrange(teams, desc(salary)) 
+``` 
+
+---
+
+## Barplots of Salary, Points, Experience with Average Vertical Line 
+
+---
+
+#### 1. Barplot of NBA Teams Ranked by Total Salary
+
+``` {r horizontal barplot ranked by salary with vertical mean salary line}
+ggplot(teams, aes(x = reorder(team, salary), y = salary)) +
+  geom_bar(stat = 'identity', fill = 'grey', size = 1) +
+  coord_flip() + 
+  labs(title = 'NBA Teams ranked by Total Salary') +
+  xlab(label = 'Teams') +
+  ylab(label = 'Salary (in millions)') +
+  geom_hline(yintercept = mean(teams$salary), colour = 'red', size = 2)
+```   
+
+---
+
+#### 2. Barplot of NBA Teams Ranked by Total Points
+
+``` {r horizontal barplot ranked by total points with vertical mean points line} 
+ggplot(teams, aes(x = reorder(team, points), y = points)) +
+         geom_bar(stat = 'identity', fill = 'grey', size = 1) +
+         coord_flip() + 
+         xlab(label = 'Teams') +
+         ylab(label = 'Points') + 
+         geom_hline(yintercept = mean(teams$points), colour = 'red',
+                    size = 2) + 
+  labs(title = 'NBA Teams Ranked by Points') 
+``` 
+
+---
+
+#### 3. Barplot of NBA Teams Ranked by Total Efficiency
+
+``` {r horizontal barplot ranked by total efficiency with mean efficiency}
+ggplot(teams, aes(x = reorder(team, efficiency), y = efficiency)) + 
+  geom_bar(stat = 'identity', fill = 'grey', size = 1) + 
+  xlab(label = 'Teams') +
+  ylab(label = 'Efficiency') + 
+  labs(title = 'NBA Teams Ranked by Efficiency') +
+  geom_hline(yintercept = mean(teams$efficiency), colour = 'red', size = 2) +
+  coord_flip()
+``` 
+
+---
+
+##### Common Errors
+
+---
+* geom_hline:
+  * forgetting to include "y intercept"
+  * "colour" not "color" 
+* using plural versions of parameters 
+* coord_flip not flip_coord 
+* because of coord_flip:
+  * using x as y, and y as x 
+  * using vline instead of hline
+  * xlab and ylab mix up 
+
+---
+
+### PCA 
+
+---
+``` {r graph of PC1 and PC2}
+teams <- teams[-1]
+teams1 <- data.frame(teams[ , c(1, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14)]) #data frame of variables # needed
+pca <- prcomp(teams1[-1], scale. = TRUE) #pca of teams1
+composite <- data.frame(team = teams[ , 1],pc1 = pca$x[ , 1], pc2 = pca$x[ , 2], stringsAsFactors = FALSE) #dataframe of teams, pc1, pc2
+# composite$pc1 <- -1 * composite$pc1 #pc1 times -1 ... still don't know why 
+composite1 <- data.frame(team = teams[ , 1], pc1 = pca$x[ , 1], pc2 = pca$x[ , 2], stringsAsFactors = FALSE) #same data frame as composite but for the next section
+# composite1$pc1 <- -1 * composite1$pc1 #same -1 conversion 
+ggplot(composite, aes(pc1, pc2)) + geom_point() + geom_text(aes(label = teams$team)) + labs(title = "PCA plot (PC1 and PC2)") + geom_hline(yintercept = 0) + geom_vline(xintercept = 0)  #scatterplot of pca 1 and pca 2
+``` 
+
+---
+
+### Index Based on PC1
+
+---
+``` {r scale pc1 and barplot}
+composite1$pc1 <- (composite1$pc1 - min(composite1$pc1))/(max(composite1$pc1) - min(composite1$pc1))
+
+ggplot(composite1, aes(x = reorder(team, pc1), y = pc1)) +
+         geom_bar(stat = 'identity', fill = 'grey', size = 1) +
+         coord_flip() + 
+         xlab(label = 'Team') +
+         ylab(label = 'First PC(scaled from 0 to 100)') + 
+  labs(title = 'NBA Teams ranked by scaled pc1') 
+```
+
+Interesting how Cleveland is ranked so low. 
+
+--- 
+
+##### Common Errors
+
+---
+
+* I NEED TO READ THE INSTRUCTIONS AND PROBLEMS MORE CAREFULLY 

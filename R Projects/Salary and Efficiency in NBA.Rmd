@@ -1,0 +1,140 @@
+---
+title: "hw02"
+output: github_document
+author: 'Brandon Huang' 
+---
+
+``` {r include = FALSE}
+library(readr)
+#setwd("/Users/brandon/Desktop/stat133/stat133-hws-fall17/hw02/data")
+#getwd()
+```
+
+### 2. Importing the Data
+``` {r}
+colClasses = c(
+  "character",
+  "character",
+  "factor", 
+  "character",
+  "real",
+  rep("integer", 19)
+)
+```
+
+``` {r}
+col_brandon = list(
+  col_character(),
+  col_character(),
+  col_factor(c('C', 'PF', 'PG', 'SF', 'SG')), 
+  col_character(),
+  col_double(),
+  rep(col_integer(), 19)
+  )
+```
+
+``` {r} 
+#read_csv - readr
+dat2 <- read_csv("/Users/brandon/Desktop/stat133/stat133-hws-fall17/hw02/data/nba2017-player-statistics.csv", col_types = col_brandon)   
+dat2$Experience <- replace(dat2$Experience, dat2$Experience == "R", "0")
+dat2$Experience <- as.integer(dat2$Experience)
+#???ASK TA"nba2017-player-statistics.csv", col_types?????????????
+
+str(dat2)
+#read.csv - base
+dat <- read.csv(file = "/Users/brandon/Desktop/stat133/stat133-hws-fall17/hw02/data/nba2017-player-statistics.csv", stringsAsFactors = FALSE, colClasses = colClasses)
+dat$Experience <- replace(dat$Experience, dat$Experience == "R", "0")
+dat$Experience <- as.integer(dat$Experience)
+str(dat) 
+``` 
+
+### 4. Performance of Players
+```{r}
+#new statistics
+Missed_FG = dat$FGA - dat$FGM
+Missed_FT = dat$FTA - dat$FTM 
+PTS = dat$Points3 * 3 + dat$Points2 * 2  + dat$FTM
+REB = dat$OREB + dat$DREB
+MPG = dat$MIN/ dat$GP
+
+
+#add columns
+dat <- cbind(dat, Missed_FG)
+dat <- cbind(dat, Missed_FT)
+dat <- cbind(dat, PTS)
+dat <- cbind(dat, REB)
+dat <- cbind(dat, MPG)
+
+```
+
+```{r}
+EFF = ((dat$PTS + dat$REB + dat$AST + dat$STL + dat$BLK - dat$Missed_FG - dat$Missed_FT - dat$TO) / dat$GP)
+
+summary(EFF) 
+
+dat <- cbind(dat, EFF)
+
+hist(dat$EFF, main = "Histogram of Efficiency", xlab = 'EFF', ylab = 'Frequency', ylim = c(0, 200))
+```
+
+``` {r}
+#top then players by EFF
+head(dat[order(dat$EFF, decreasing = TRUE), c(1, 2, 5, 30)], 10)
+
+#players with negative EFF
+dat[dat$EFF < 0, 1]
+```
+
+``` {r efficiency, fig.width = 12, fig.height = 8}
+#correlation between EFF and variable 
+co <- c(PTS = cor(dat$EFF, dat$PTS), 
+REB = cor(dat$EFF, dat$REB),
+AST = cor(dat$EFF, dat$AST),
+STL = cor(dat$EFF, dat$STL),
+BLK = cor(dat$EFF, dat$BLK),
+Missed_FG = cor(dat$EFF, dat$Missed_FG) * -1,
+Missed_FT = cor(dat$EFF, dat$Missed_FT) * -1,
+TO = cor(dat$EFF, dat$TO) * -1,  
+GP = cor(dat$EFF, dat$GP))
+
+co <- sort(co, decreasing = TRUE) 
+
+barplot(co, space = 0.3, col = ifelse(co < 0, 'red', 'grey'), ylim = c(-1,1))   
+```
+
+### 5. Efficiency and Salary
+``` {r}
+#plotting EFF (x) and Salary (y), include lowess smooth line, compute linear correlation coeffecient 
+
+mil_salary <- dat$Salary/1000000
+
+plot(dat$EFF, mil_salary, main = "Scatterplot of Efficiency and Salary", xlab = 'Efficiency', ylab = 'Salary (in millions)')
+
+cor(dat$EFF, mil_salary)
+
+lines(lowess(dat$EFF, mil_salary), col= 'red')
+text(30, 30, 'lowess', col = 'red')
+```
+
+What can you say about the relationship between Efficiency and Salary? 
+The relationship between Efficiency and Salary is that if efficiency goes up, salary is most likely to follow. The correlation is 0.655 which indicates they are positively correlated. 
+
+``` {r}
+#scatterplot for MPG > 20
+players2 <- dat[dat$MPG > 20, ]
+mil_salary_players2 <- players2$Salary/1000000
+
+plot(players2$EFF, mil_salary_players2, main = "Scatterplot of Efficiency and Salary of Players with MPG > 20", xlab = 'Efficiency', ylab = 'Salary (in millions)')
+
+lines(lowess(players2$EFF, mil_salary_players2), col= 'red')
+text(32, 27, 'lowess', col = 'red')
+
+cor(players2$EFF, mil_salary_players2)
+```
+
+What can you say about the relationship between these two variables for the "more established players"?
+With MPG > 20 taken into account, the correlation is less than the relationship between efficency and salary of all players. However it is still positive which indicates a positive relationship between the two. If efficiency goes up, salary is likely to go up too. I think that there is a difference in correlation between the two because players with more experience's payrates do not fluctuate as much as the total with rookies. 
+
+### 6. Comments and Reflections
+
+Using read_csv was hard because a lot of the syntax changes and there were small things like col_factor you have to include the levels. I needed help on the col_factor and csv_read part. I did not know I had to manually put -1 into the Missed Field Goal and Missed Free Throw. The most time consuming part was read_csv. I am not sure if I fully understand the interpretation of the graphs for scatterplots of efficiency and salary of players. There wasn't any frustrating and figuring out the csv_read through a friend was the best part. 
