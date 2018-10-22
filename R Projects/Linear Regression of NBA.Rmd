@@ -1,0 +1,278 @@
+---
+title: "hw01-brandon-huang"
+output: github_document
+author: 'Brandon Huang'
+---
+### Table of Contents
+
+> 1. Data Preprocessing  
+2. Scatterplot of Points and Salary 
+3. Correlation between points and Salary 
+4. Simple Linear Regression
+5. Plotting the Regression Line 
+6. Regression residuals and Coefficient of Determinant $R^2$ 
+
+```{r}
+load('data/nba2017-salary-points.RData')
+
+ls()
+``` 
+
+the more points a player scores, the higher the salary? 
+
+### 1. Data Preprocessing 
+```{r}
+mil_salary = round(salary/1000000, digits = 2)
+``` 
+
+```{r}
+integer_exp = replace(experience, experience == 'R', 0) 
+#experience[experience == 'R'] <- 0
+#experience <- as.integer(experience) 
+```
+
+```{r}
+fac_pos = factor(position, c('C', 'SF', 'PF', 'SG', 'PG'), c('center', 'small_fwd', 'power_fwd', 'shooting_guard', 'point_guard'))
+
+table(fac_pos) 
+
+#pos_labels <- c('center, 'point_fwd', ....) 
+#position <- factor(position, labels = pos_labels) 
+``` 
+
+### 2. Scatterplot of Points and Salary
+```{r}
+plot(x = points, y = mil_salary, xlab = 'Points', ylab = 'Salary(in millions)', main = 'Scatterplot of Points and Salary', col = 'blue')
+``` 
+
+The general conensus of the graph is that players who score lower earn lower and players who score higher earn higher. However, there are a couple of outliers. The outliers can be due to position and contracts. For example, centers are not high scorers but they can be paid higher contracts for their rebound abilities. Another example on contracts is that Stephen Curry signed multi-year contract when he was average and although he improved, his contract remains the same. 
+
+### 3. Correlation between Points and Salary
+
+``` {r include = FALSE}
+x = points 
+#y = salary
+y = mil_salary
+```
+
+* #### n: number of individuals
+``` {r} 
+length(player)
+n = length(player) 
+``` 
+* #### $\bar{x}$: mean of variable X (points)
+``` {r}
+1/n*sum(points) 
+mean_x = 1/n*sum(points) 
+```
+* #### $\bar{y}$: mean of variable Y (salary) 
+``` {r}
+(1/n)*sum(`y`)
+mean_y = 1/n*sum(`y`)
+```
+* #### var(x): variance of X 
+``` {r}
+(1/(n-1)) * sum((points - mean_x)**2) 
+var_x = (1/(n-1)) * sum((points - mean_x)**2) 
+```
+* #### var(Y): variance of Y 
+``` {r} 
+(1/(n-1)) * sum((`y` - mean_y)**2) 
+var_y = (1/(n-1)) * sum((`y` - mean_y)**2)
+``` 
+* #### sd(X): standard deviation of X 
+``` {r}
+sqrt(var_x)
+sd_x = sqrt(var_x)
+```
+* #### sd(Y): standard deviation of Y 
+``` {r} 
+sqrt(var_y) 
+sd_y = sqrt(var_y) 
+```
+* #### cov(X, Y): covariance between X and Y 
+``` {r} 
+(1/(n-1)) * sum((points-mean_x)*(`y`-mean_y)) 
+cov_xy = (1/(n-1)) * sum((points-mean_x)*(`y`-mean_y)) 
+```
+* #### cor(X, Y): correlation between X and Y 
+``` {r} 
+cov_xy/(sd_x*sd_y)
+cor_xy = cov_xy/(sd_x*sd_y)
+``` 
+
+### 4. Sample Linear Regression 
+
+> Linear Regression Equation  
+$\hat {Y}$ = $b_0$ + $b_1$X
+
+Where: 
+
+* $\hat{Y}$ is the fitted or predicted values of Y 
+
+``` {r} 
+b1 = cor_xy * (sd_y/sd_x)
+b0 = mean_y - b1 * mean_x
+
+Y_regression = b0 + b1 * points
+``` 
+
+``` {r include = FALSE}
+regression_inline <- "Y_regression = b0 + b1 * points" 
+```
+
+* $b_0$ is the estimated intercept of the regression line
+
+> $b_0$ = $\bar{y}$ - $b_1$ * $\bar{x}$ 
+
+``` {r} 
+b1 = cor_xy * (sd_y/sd_x)
+b0 = mean_y - b1 * mean_x
+```
+
+* $b_1$ is the estimated slope of the regression line
+
+> $b_1$ = cor(X, Y) * sd(Y)/sd(X) 
+
+``` {r} 
+b1 = cor_xy * (sd_y/sd_x) 
+``` 
+
+##### Answers
+
+1. Summary Statistics of Y_regression? 
+
+``` {r} 
+summary(Y_regression) 
+```
+
+2. What is the regression equation? 
+
+`r regression_inline` 
+
+3. How do you interpret the slope coefficient $b_1$? 
+
+for every additional scored point, the salary of a player will tend to increase by 0.0086 millions of dollars on average 
+
+4. How do you interpret the intercept term $b_0$? 
+
+the intercept can be interpreted as the theoritical salary for a player who scores no points, that is: 1.5091 millions of dollars 
+
+when points is 0, what is the salary? 
+
+5. What is the predicted salary for a player that scores:
+
+    * 0 points?
+    ``` {r} 
+    b0 + b1 * 0
+    ```
+    * 100 points?
+    ``` {r}
+    b0 + b1 * 100
+    ```
+    * 500 points? 
+    ``` {r}
+    b0 + b1 * 500
+    ``` 
+    * 1000 points?
+    ``` {r}
+    b0 + b1 * 1000
+    ```
+    * 2000 points? 
+    ``` {r}
+    b0 + b1 * 2000
+    ```
+
+### 5. Plotting the Regression Line
+
+``` {r} 
+plot(x = points, y = `y`, xlab = 'Points', ylab = 'Salary (in millions)', main = "Scatterplot of Salary and Points")
+
+lines(lowess(points, mil_salary), col = 'red')
+abline(a = b0, b = b1, col = 'purple')
+
+text(2500, 25, label = 'regression', col = 'purple')
+text(2500, 28, label = 'lowess', col = 'red')
+``` 
+
+
+
+
+### 6. Regression residuals and Coefficients of Determination $R^2$ 
+
+#### Regression residuals
+
+```{r}
+e_i = mil_salary - Y_regression
+```
+
+> $e_i$ = $y_i$ - $\hat y_i$  
+#the better the fit of the regression equation, the smaller the residuals $e_i$ should be. 
+
+> Residual Sum of Squares (RSS) = sum((e_i)^2)
+
+``` {r}
+RSS = sum((e_i)^2)
+TSS = sum((mil_salary - mean_y)^2)
+
+r_2 = 1- (RSS/TSS)
+#r_2 coefficient is the proportion of the variance in Y that is predicted from X. IE: $R^2$ provides a measure of how well observed values $y_i$ are replicated by the fitted valued $\hat y_i$ based on the proportion of total variation of Y explained by the regression equation
+```
+
+##### Answer:
+1. the vector of residuals (display only its summary() statistics) 
+```{r}
+summary(e_i)
+```
+2. the Residual Sum of Squares
+```{r}
+RSS
+```
+3. the Total Sum of Squares
+```{r}
+TSS
+```
+4. the coefficient of determination $R^2$ 
+```{r}
+r_2
+```
+
+### 7. Exploring Position and Experience 
+
+``` {r}
+plot(integer_exp, mil_salary, xlab = 'Years of Experience', ylab = 'Salary (in millions)', main = 'Scatterplot with lowest smooth')
+lines(lowess(integer_exp, mil_salary), col = 'red')
+```
+
+``` {r include = FALSE} 
+library('scatterplot3d') 
+```
+
+```{r} 
+scatterplot3d(points, integer_exp, mil_salary, color = 'orange', xlab = 'points', ylab = 'experience', zlab = 'salary', main = '3D scatterplot')
+``` 
+
+``` {r}
+boxplot(mil_salary~fac_pos, ylab = 'salary')
+```
+
+#### Answers
+1. Provide concise descriptions for the plots of this section
+
+*Scatterplot with lowest smooth: more years of experience does not mean higher salary. Veterans who are past their prime earn less than players who are in their prime. 
+
+*3D scatterplot: it seems like the middle part of experience scores the most and earns the most with some outliers. 
+
+boxplot: position does not change median salary range. players in positions on average earn the same. 
+
+2. From the scatterplots, does experience seem to be related with salary? 
+
+no, the lowess line does not indicate that experience is related with salary. also, by looking at the plot, you can tell players who are in their prime, on average, earn more than veterans. 
+
+3. from the boxplot, does position seem to be related with salary?
+
+no because the median is basically the same across all five positions. the center does has the highest maximum so there is so relation there but on average, no. 
+
+### 8. Comments and Reflections
+
+the equations and lines are hard to interpret, we never saw them in class though. Assigning text to the lines was easy. inline was pretty easy and really useful. I needed help to complete the assignment. I searched on googles for how functions work, what equations mean, and other syntax related issues. It took me 5 hours to complete the homework. There were some minor issues at the beginning that could be mitigated with more R usage. Frustrating were the small issues that i didn't understand why it was happening. Also, i tried to assign a text to the line which i couldn't figure out how to. I ended up manually placing the text at a certain position. I didn't fully grasp the formulas, for exmaple, RSS and TSS and R^2. I felt proud to complete the assignment and really finding the answers to problems on my own. I didn't need a GSI to help me, instead i thought it through and searched for the right questions online or just figured it out myself. 

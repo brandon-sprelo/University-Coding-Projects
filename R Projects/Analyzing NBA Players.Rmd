@@ -1,0 +1,240 @@
+---
+title: "Data Frame Basics"
+output: html_document
+author: 'Brandon Huang' 
+---
+
+> ### Table of Contents
+1. Manipulating Data Frames
+2. Creating Table Frames 
+3. Basic Operations with Data Frames 
+    * Selecting Elements 
+    * Adding a Column
+    * Deleting a Column 
+    * Renaming a Column 
+    * Moving a Column
+    * Transforming a Column 
+    
+---
+
+### Creating
+
+---
+
+``` {r} 
+player <- c('Thompson', 'Curry', 'Green', 'Durant', 'Pachulia') 
+position <- c('SG', 'PG', 'PF', 'SF', 'C') 
+salary <- c(16663575, 12112359, 15330435, 26540100, 2898000)
+points <- c(1742, 1999, 776, 1555, 426) 
+ppg <- c(22.3, 25.3, 10.2, 25.1, 6.1) 
+rookie <- c(FALSE, FALSE, FALSE, FALSE, FALSE) 
+``` 
+
+``` {r} 
+warriors_table <- data.frame(player, position, salary, points, ppg, rookie) 
+``` 
+
+``` {r} 
+warriors_table
+``` 
+
+``` {r} 
+mode(warriors_table)
+class(warriors_table) 
+``` 
+
+``` {r}
+warriors_list <- list(
+  player = c('Thompson', 'Curry', 'Green', 'Durant','Pachulia'), 
+  position = factor(c('SG', 'PG', 'PF', 'SF', 'C')), 
+  salary = c(16663575, 12112359, 15330435, 26540100,         2898000),
+  points = as.integer(c(1742, 1999, 776, 1555, 426)), 
+  ppg = c(22.3, 25.3, 10.2, 25.1, 6.1), 
+  rookie = c(FALSE, FALSE, FALSE, FALSE, FALSE)
+)
+
+warriors_table2 <- data.frame(warriors_list, stringsAsFactors = FALSE) 
+
+str(warriors_table2) 
+``` 
+
+``` {r} 
+warriors_cbind <- cbind(player, position, salary, points, ppg, rookie)
+
+class(warriors_cbind)
+
+warriors_table2 <- data.frame(warriors_cbind)
+``` 
+
+###NBA Player Data
+
+``` {r}
+csv <- "https://github.com/ucb-stat133/stat133-fall-2017/raw/master/data/nba2017-players.csv"
+download.file(url = csv, destfile = 'nba2017-players.csv')
+
+dat <- read.csv('nba2017-players.csv', stringsAsFactors = FALSE)
+```
+
+* Display the last 5 rows of the data.
+``` {r}
+dat[436:441, ]
+tail(dat, 5) 
+```
+* Display those rows associated to players having height less than 70 inches tall.
+``` {r}
+dat[dat[ , 4] < 70 , ]
+```
+* Of those players that are centers (position C), display their names and salaries.
+```{r}
+dat[dat[ , 3] == 'C', c(1, 9)] 
+```
+* Create a data frame durant with Kevin Durant's information (i.e. row).
+``` {r}
+durant <- data.frame(dat[dat[ , 1] == 'Kevin Durant', ]) 
+```
+* Create a data frame ucla with the data of players from college UCLA ("University of California, Los Angeles").
+``` {r}
+ucla <- data.frame(dat[dat[ , 8] == 'University of California, Los Angeles', ]) 
+```
+* Create a data frame rookies with those players with 0 years of experience.
+``` {r}
+rookies <- data.frame(dat[dat[ , 7] == 0, ]) 
+```
+* Create a data frame rookie_centers with the data of Center rookie players.
+``` {r}
+rookie_center <- data.frame(rookies[rookies[ , 3] == 'C', ]) 
+```
+* Create a data frame top_players for players with more than 50 games and more than 100 minutes played.
+``` {r}
+top_players <- data.frame(dat[dat[ , 10] > 50 & dat[ ,11] > 100, ])
+```
+* What's the largest height value?
+``` {r}
+max(dat[ ,4])
+```
+* What's the minimum height value?
+```{r}
+min(dat[ , 4])
+```
+* What's the overall average height?
+``` {r}
+mean(dat[ , 4])
+```
+* Who is the tallest player?
+``` {r}
+dat[which.max(dat[ ,4]), 1]
+```
+Who is the shortest player?
+``` {r}
+dat[which.min(dat[ ,4]), 1]
+```
+* Which are the unique teams?
+``` {r}
+unique(dat[ , 2])
+```
+* How many different teams?
+``` {r}
+length(unique(dat[ , 2]))
+```
+* Who is the oldest player?
+``` {r}
+dat[which.max(dat[ ,6]), 1]
+```
+* What is the median salary of all players?
+``` {r}
+median(dat[ , 9])
+```
+* What is the median salary of the players with 10 years of experience or more?
+``` {r}
+median(dat[dat[ , 7] > 10, 9])
+```
+* What is the median salary of Shooting Guards (SG) and Point Guards (PG)?
+``` {r}
+median(dat[dat[ , 3] == 'SG' | dat[ , 3] == 'PG', 9])
+```
+* What is the median salary of Power Forwards (PF), 29 years or older, and 74 inches tall or less?
+``` {r}
+median(dat[dat[ , 3] == 'PF' & dat[ , 6] > 29 & dat[ , 4] < 74, 9])
+```
+
+* How many players scored 4 points or less? 
+```{r}
+length(dat[dat[ , 12] < 4, 1])
+```
+*Who are those players who scored 4 points or less?
+``` {r}
+dat[dat[ , 12] < 4, 1]
+```
+* Who is the player with 0 points?
+``` {r}
+dat[dat[ , 12] == 0, 1]
+```
+* How many players are from "University of California, Berkeley"?
+``` {r}
+length(dat[dat[ , 8] == 'University of California', 1 ])
+```
+* Are there any players from "University of Notre Dame"? If so how many and who are they?
+``` {r}
+length(dat[dat[ , 8] == 'Univeristy of Notre Dame', 1])
+```
+* Are there any players with weight greater than 260 pounds? If so how many and who are they?
+``` {r}
+length(dat[dat[ , 5] > 260, 1])
+dat[dat[ , 5] > 260, 1]
+```
+* How many players did not attend a college in the US?
+
+* Who is the player with the maximum rate of points per minute?
+``` {r}
+dat[which.max(dat[ , 12]/dat[ , 11]), 1]
+```
+* Who is the player with the maximum rate of three-points per minute?
+``` {r}
+dat[which.max(dat[ , 13]/dat[ , 11]), 1]
+```
+* Who is the player with the maximum rate of two-points per minute?
+``` {r}
+dat[which.max(dat[ , 14]/dat[ , 11]), 1]
+```
+* Who is the player with the maximum rate of one-points (free-throws) per minute?
+``` {r}
+dat[which.max(dat[ , 15]/dat[ , 11]), 1]
+```
+* Create a data frame gsw with the name, height, weight of Golden State Warriors (GSW)
+``` {r}
+gsw <- data.frame(dat[dat[ , 2] == 'GSW', c(1, 4, 5)])
+```
+* Display the data in gsw sorted by height in increasing order (hint: see ?sort and ?order)
+``` {r}
+gsw[order(gsw[, 2]), ]
+```
+* Display the data in gsw by weight in decreasing order (hint: see ?sort and ?order)
+``` {r}
+gsw[order(gsw[,3], decreasing = TRUE), ]
+```
+* Display the player name, team, and salary, of the top 5 highest-paid players (hint: see ?sort and ?order)
+``` {r}
+dat[order(dat[ , 9], decreasing = TRUE), c(1, 2, 9)][1:5 ,] 
+```
+* Display the player name, team, and points3, of the top 10 three-point players (hint: see ?sort and ?order)
+``` {r}
+dat[order(dat[ , 13], decreasing = TRUE), c(1, 2, 9)][1:10 ,] 
+```
+
+### Group By 
+* Create a data frame with the average height, average weight, and average age, grouped by position
+``` {r}
+aggregate(dat[ , c('height', 'weight', 'age')], by = list(dat$position), FUN = mean) 
+```
+* Create a data frame with the average height, average weight, and average age, grouped by team
+``` {r}
+aggregate(dat[ , c('height', 'weight', 'age')], by = list(dat$team), FUN = mean) 
+```
+* Create a data frame with the average height, average weight, and average age, grouped by team and position.
+``` {r}
+aggregate(dat[ , c('height', 'weight', 'age')], by = c(list(dat$team), list(dat$position)), FUN = mean)  
+```
+* Difficult: Create a data frame with the minimum salary, median salary, mean salary, and maximum salary, grouped by team and position.
+``` {r}
+aggregate(dat$salary, by = c(list(dat$team), list(dat$position)), FUN = function(x) c(min = min(x), med = median(x), avg = mean(x), max = max(x))
+```
